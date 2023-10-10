@@ -15,6 +15,7 @@ import com.tp.esbase.event.testdomain.event.AccountCreated;
 import com.tp.esbase.event.testdomain.event.AmountBlocked;
 import com.tp.esbase.event.testdomain.event.AmountCaptured;
 import com.tp.esbase.event.testdomain.event.AmountDeposited;
+import com.tp.esbase.event.testdomain.event.AmountReleased;
 import com.tp.esbase.event.testdomain.event.AmountWithdrawn;
 import java.math.BigDecimal;
 import lombok.Getter;
@@ -30,7 +31,7 @@ public class AccountAggregate extends AggregateRoot<AccountId> {
   private AccountBalance availableBalance;
   private AccountBlockedBalance blockedBalance;
 
-  AccountAggregate(Version version, EventId latestEvent) {
+  public AccountAggregate(Version version, EventId latestEvent) {
     super(AGGREGATE_TYPE, version, latestEvent);
   }
 
@@ -84,6 +85,17 @@ public class AccountAggregate extends AggregateRoot<AccountId> {
     handleAndRegisterEvent(event);
   }
 
+  public void release(BlockId blockId) {
+    if (this.blockedBalance.doesNotContain(blockId)) {
+      throw accountBlockDoesNotExistException(
+          this.id,
+          blockId
+      );
+    }
+    var event = new AmountReleased(nextDomainEventHeader(), blockId);
+    handleAndRegisterEvent(event);
+  }
+
   private void checkSupportedCurrency(Currency currency) {
     if (isUnsupportedCurrency(currency)) {
       throw accountUnsupportedCurrencyException(
@@ -106,6 +118,7 @@ public class AccountAggregate extends AggregateRoot<AccountId> {
       case AmountWithdrawn it -> handle(it);
       case AmountBlocked it -> handle(it);
       case AmountCaptured it -> handle(it);
+      case AmountReleased it -> handle(it);
       default -> {
         // ignore unsupported events
       }
@@ -138,6 +151,12 @@ public class AccountAggregate extends AggregateRoot<AccountId> {
 
   private void handle(AmountCaptured event) {
     this.blockedBalance.release(event.blockId());
+    registerOutEvent(event);
+  }
+
+  private void handle(AmountReleased event) {
+    var block = this.blockedBalance.release(event.blockId());
+    this.availableBalance = this.availableBalance.add(block.amount().value());
     registerOutEvent(event);
   }
 }

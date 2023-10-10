@@ -12,8 +12,9 @@ public final class AccountBlockedBalance {
     this.blocks.merge(block.id(), block.amount(), (prev, curr) -> prev.add(curr.value()));
   }
 
-  public void release(BlockId blockId) {
-    this.blocks.remove(blockId);
+  public Block release(BlockId blockId) {
+    var amount = this.blocks.remove(blockId);
+    return new Block(blockId, amount);
   }
 
   public boolean doesNotContain(BlockId blockId) {
