@@ -2,7 +2,7 @@ package com.tp.esbase.event.store;
 
 import com.tp.esbase.event.AggregateId;
 
-public interface EventDeserializer {
+public interface EventDeserializer<P> {
 
-  <ID extends AggregateId, P> AggregateDomainEvent<ID> deserialize(SerializedEvent<P> event);
+  <ID extends AggregateId> AggregateDomainEvent<ID> deserialize(SerializedEvent<P> event);
 }

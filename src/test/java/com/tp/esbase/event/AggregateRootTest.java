@@ -1,19 +1,19 @@
 package com.tp.esbase.event;
 
+import static com.tp.esbase.event.AccountAggregateFixtures.CURRENCY_EUR;
+import static com.tp.esbase.event.AccountAggregateFixtures.emptyAccountAggregate;
+import static com.tp.esbase.event.AccountAggregateFixtures.invalidAmount;
+import static com.tp.esbase.event.AccountAggregateFixtures.newAccountNumber;
+import static com.tp.esbase.event.AccountAggregateFixtures.newBlockId;
+import static com.tp.esbase.event.AccountAggregateFixtures.nextDomainEventHeader;
+import static com.tp.esbase.event.AccountAggregateFixtures.validAmount;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.tp.esbase.event.DomainEvent.DomainEventHeader;
-import com.tp.esbase.event.DomainEvent.EventId;
-import com.tp.esbase.event.DomainEvent.EventTimestamp;
 import com.tp.esbase.event.testdomain.AccountAggregate;
 import com.tp.esbase.event.testdomain.AccountId;
-import com.tp.esbase.event.testdomain.AccountNumber;
-import com.tp.esbase.event.testdomain.AccountNumber.Iban;
-import com.tp.esbase.event.testdomain.Amount;
 import com.tp.esbase.event.testdomain.Block;
-import com.tp.esbase.event.testdomain.Block.BlockId;
-import com.tp.esbase.event.testdomain.Currency;
 import com.tp.esbase.event.testdomain.error.AccountBalanceTooLowForBlockException;
 import com.tp.esbase.event.testdomain.error.AccountBalanceTooLowForWithdrawalException;
 import com.tp.esbase.event.testdomain.error.AccountBlockDoesNotExistException;
@@ -25,77 +25,74 @@ import com.tp.esbase.event.testdomain.event.AmountDeposited;
 import com.tp.esbase.event.testdomain.event.AmountReleased;
 import com.tp.esbase.event.testdomain.event.AmountWithdrawn;
 import java.math.BigDecimal;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
-import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class AggregateRootTest {
 
-  private static final Currency CURRENCY_EUR = Currency.of("EUR");
-  private static final Currency CURRENCY_USD = Currency.of("USD");
+  @Nested
+  class Create {
 
-  private final Faker faker = new Faker(Locale.ENGLISH);
+    @Test
+    void when_instantiate_account_aggregate_then_aggregate_created() {
+      // given
+      var accountId = new AccountId(UUID.randomUUID());
+      var number = newAccountNumber();
+      var currency = CURRENCY_EUR;
 
-  @Test
-  void when_instantiate_account_aggregate_then_aggregate_created() {
-    // given
-    var accountId = new AccountId(UUID.randomUUID());
-    var number = new AccountNumber(new Iban(faker.finance().iban()));
-    var currency = CURRENCY_EUR;
+      // when
+      var accountAggregate = new AccountAggregate(
+          accountId,
+          number,
+          currency
+      );
 
-    // when
-    var accountAggregate = new AccountAggregate(
-        accountId,
-        number,
-        currency
-    );
-
-    // then
-    // aggregate data as expected
-    assertThat(accountAggregate.id()).isEqualTo(accountId);
-    assertThat(accountAggregate.number()).isEqualTo(number);
-    assertThat(accountAggregate.availableBalance().amount().currency()).isEqualTo(currency);
-    assertThat(accountAggregate.availableBalance().amount().value()).isEqualByComparingTo(BigDecimal.ZERO);
-    assertThat(accountAggregate.blockedBalance()).isNotNull();
-    assertThat(accountAggregate.type().value()).isEqualTo("account");
-    assertThat(accountAggregate.version().isInitial()).isTrue();
-    var inEvents = accountAggregate.getAndClearInEvents();
-    // and single in AccountCreated event
-    assertThat(inEvents)
-        .hasSize(1)
-        .element(0)
-        .satisfies(event -> {
-          if (event instanceof AccountCreated accountCreated) {
-            assertThat(accountCreated.header().id().value()).isOne();
-            assertThat(accountCreated.header().aggregateId()).isEqualTo(accountId);
-            assertThat(accountCreated.header().timestamp()).isNotNull();
-            assertThat(accountCreated.currency()).isEqualTo(currency);
-            assertThat(accountCreated.number()).isEqualTo(number);
-          } else {
-            Assertions.fail("Event must be of %s instance".formatted(AccountCreated.class.getSimpleName()));
-          }
-        });
-    // and single out AccountCreated event
-    var outEvents = accountAggregate.getAndClearOutEvents();
-    assertThat(outEvents)
-        .hasSize(1)
-        .element(0)
-        .satisfies(event -> {
-          if (event instanceof AccountCreated accountCreated) {
-            assertThat(accountCreated.header().id().value()).isOne();
-            assertThat(accountCreated.header().aggregateId()).isEqualTo(accountId);
-            assertThat(accountCreated.header().timestamp()).isNotNull();
-            assertThat(accountCreated.currency()).isEqualTo(currency);
-            assertThat(accountCreated.number()).isEqualTo(number);
-          } else {
-            Assertions.fail("Event must be of %s instance".formatted(AccountCreated.class.getSimpleName()));
-          }
-        });
+      // then
+      // aggregate data as expected
+      assertThat(accountAggregate.id()).isEqualTo(accountId);
+      assertThat(accountAggregate.number()).isEqualTo(number);
+      assertThat(accountAggregate.availableBalance().amount().currency()).isEqualTo(currency);
+      assertThat(accountAggregate.availableBalance().amount().value()).isEqualByComparingTo(BigDecimal.ZERO);
+      assertThat(accountAggregate.blockedBalance()).isNotNull();
+      assertThat(accountAggregate.type().value()).isEqualTo("account");
+      assertThat(accountAggregate.version().isInitial()).isTrue();
+      var inEvents = accountAggregate.getAndClearInEvents();
+      // and single in AccountCreated event
+      assertThat(inEvents)
+          .hasSize(1)
+          .element(0)
+          .satisfies(event -> {
+            if (event instanceof AccountCreated accountCreated) {
+              assertThat(accountCreated.header().id().value()).isOne();
+              assertThat(accountCreated.header().aggregateId()).isEqualTo(accountId);
+              assertThat(accountCreated.header().timestamp()).isNotNull();
+              assertThat(accountCreated.currency()).isEqualTo(currency);
+              assertThat(accountCreated.number()).isEqualTo(number);
+            } else {
+              Assertions.fail("Event must be of %s instance".formatted(AccountCreated.class.getSimpleName()));
+            }
+          });
+      // and single out AccountCreated event
+      var outEvents = accountAggregate.getAndClearOutEvents();
+      assertThat(outEvents)
+          .hasSize(1)
+          .element(0)
+          .satisfies(event -> {
+            if (event instanceof AccountCreated accountCreated) {
+              assertThat(accountCreated.header().id().value()).isOne();
+              assertThat(accountCreated.header().aggregateId()).isEqualTo(accountId);
+              assertThat(accountCreated.header().timestamp()).isNotNull();
+              assertThat(accountCreated.currency()).isEqualTo(currency);
+              assertThat(accountCreated.number()).isEqualTo(number);
+            } else {
+              Assertions.fail("Event must be of %s instance".formatted(AccountCreated.class.getSimpleName()));
+            }
+          });
+    }
   }
 
   @Nested
@@ -107,10 +104,7 @@ class AggregateRootTest {
       var accountAggregate = emptyAccountAggregate();
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(
-          CURRENCY_EUR,
-          BigDecimal.TEN
-      );
+      var amount = validAmount(BigDecimal.TEN);
 
       // when
       accountAggregate.deposit(amount);
@@ -156,10 +150,7 @@ class AggregateRootTest {
       var accountAggregate = emptyAccountAggregate();
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(
-          CURRENCY_USD,
-          BigDecimal.TEN
-      );
+      var amount = invalidAmount(BigDecimal.TEN);
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.deposit(amount));
@@ -186,10 +177,10 @@ class AggregateRootTest {
     void when_withdraw_then_success() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(CURRENCY_EUR, BigDecimal.ONE);
+      var amount = validAmount(BigDecimal.ONE);
 
       // when
       accountAggregate.withdraw(amount);
@@ -232,10 +223,10 @@ class AggregateRootTest {
     void when_withdraw_more_than_available_then_fail() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.ONE));
+      accountAggregate.deposit(validAmount(BigDecimal.ONE));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(CURRENCY_EUR, BigDecimal.TEN);
+      var amount = validAmount(BigDecimal.TEN);
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.withdraw(amount));
@@ -258,10 +249,10 @@ class AggregateRootTest {
     void when_withdraw_different_currency_then_fail() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(CURRENCY_USD, BigDecimal.ONE);
+      var amount = invalidAmount(BigDecimal.ONE);
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.withdraw(amount));
@@ -288,11 +279,11 @@ class AggregateRootTest {
     void when_block_then_success() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(CURRENCY_EUR, BigDecimal.ONE);
-      var block = new Block(new BlockId(UUID.randomUUID().toString()), amount);
+      var amount = validAmount(BigDecimal.ONE);
+      var block = new Block(newBlockId(), amount);
 
       // when
       accountAggregate.block(block);
@@ -337,11 +328,11 @@ class AggregateRootTest {
     void when_block_more_than_available_then_fail() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.ONE));
+      accountAggregate.deposit(validAmount(BigDecimal.ONE));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(CURRENCY_EUR, BigDecimal.TEN);
-      var block = new Block(new BlockId(UUID.randomUUID().toString()), amount);
+      var amount = validAmount(BigDecimal.TEN);
+      var block = new Block(newBlockId(), amount);
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.block(block));
@@ -365,11 +356,11 @@ class AggregateRootTest {
     void when_withdraw_different_currency_then_fail() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var amount = new Amount(CURRENCY_USD, BigDecimal.ONE);
-      var block = new Block(new BlockId(UUID.randomUUID().toString()), amount);
+      var amount = invalidAmount(BigDecimal.ONE);
+      var block = new Block(newBlockId(), amount);
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.block(block));
@@ -396,11 +387,11 @@ class AggregateRootTest {
     void when_capture_then_success() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
-      var blockId = new BlockId(UUID.randomUUID().toString());
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
+      var blockId = newBlockId();
       var block = new Block(
           blockId,
-          new Amount(CURRENCY_EUR, BigDecimal.ONE)
+          validAmount(BigDecimal.ONE)
       );
       accountAggregate.block(block);
       accountAggregate.getAndClearInEvents();
@@ -448,10 +439,10 @@ class AggregateRootTest {
     void when_capture_non_existing_block_then_fail() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var blockId = new BlockId(UUID.randomUUID().toString());
+      var blockId = newBlockId();
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.capture(blockId));
@@ -476,11 +467,11 @@ class AggregateRootTest {
     void when_release_then_success() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
-      var blockId = new BlockId(UUID.randomUUID().toString());
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
+      var blockId = newBlockId();
       var block = new Block(
           blockId,
-          new Amount(CURRENCY_EUR, BigDecimal.ONE)
+          validAmount(BigDecimal.ONE)
       );
       accountAggregate.block(block);
       accountAggregate.getAndClearInEvents();
@@ -528,10 +519,10 @@ class AggregateRootTest {
     void when_release_non_existing_block_then_fail() {
       // given
       var accountAggregate = emptyAccountAggregate();
-      accountAggregate.deposit(new Amount(CURRENCY_EUR, BigDecimal.TEN));
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
       accountAggregate.getAndClearInEvents();
       accountAggregate.getAndClearOutEvents();
-      var blockId = new BlockId(UUID.randomUUID().toString());
+      var blockId = newBlockId();
 
       // when
       var throwableAssert = assertThatCode(() -> accountAggregate.release(blockId));
@@ -556,11 +547,11 @@ class AggregateRootTest {
     void given_events_when_restore_then_success() {
       // given
       var accountId = new AccountId(UUID.randomUUID());
-      var accountNumber = new AccountNumber(new Iban(faker.finance().iban()));
-      var domainEventHeader = new DomainEventHeader<>(EventId.initial(), accountId, EventTimestamp.now());
+      var accountNumber = newAccountNumber();
+      var domainEventHeader = DomainEventHeader.initial(accountId);
       var headerHolder = new AtomicReference<>(domainEventHeader);
-      var block1 = new BlockId(UUID.randomUUID().toString());
-      var block2 = new BlockId(UUID.randomUUID().toString());
+      var block1 = newBlockId();
+      var block2 = newBlockId();
       // account aggregate events
       var events = Stream.<DomainEventSupplier<AccountId>>of(
               DomainEventSupplier.of(header -> new AccountCreated(
@@ -570,29 +561,29 @@ class AggregateRootTest {
               )),
               DomainEventSupplier.of(header -> new AmountDeposited(
                   header,
-                  new Amount(CURRENCY_EUR, BigDecimal.ONE)
+                  validAmount(BigDecimal.ONE)
               )),
               DomainEventSupplier.of(header -> new AmountBlocked(
                   header,
                   new Block(
                       block1,
-                      new Amount(CURRENCY_EUR, BigDecimal.ONE)
+                      validAmount(BigDecimal.ONE)
                   )
               )),
               DomainEventSupplier.of(header -> new AmountDeposited(
                   header,
-                  new Amount(CURRENCY_EUR, BigDecimal.TEN)
+                  validAmount(BigDecimal.TEN)
               )),
               DomainEventSupplier.of(header -> new AmountBlocked(
                   header,
                   new Block(
                       block2,
-                      new Amount(CURRENCY_EUR, BigDecimal.valueOf(7))
+                      validAmount(BigDecimal.valueOf(7))
                   )
               )),
               DomainEventSupplier.of(header -> new AmountWithdrawn(
                   header,
-                  new Amount(CURRENCY_EUR, BigDecimal.valueOf(2))
+                  validAmount(BigDecimal.valueOf(2))
               )),
               DomainEventSupplier.of(header -> new AmountReleased(
                   header,
@@ -629,14 +620,6 @@ class AggregateRootTest {
     }
   }
 
-  private <ID extends AggregateId> DomainEventHeader<ID> nextDomainEventHeader(DomainEventHeader<ID> previous) {
-    return new DomainEventHeader<>(
-        previous.id().next(),
-        previous.aggregateId(),
-        EventTimestamp.now()
-    );
-  }
-  
   interface DomainEventSupplier<ID extends AggregateId> {
 
     DomainEvent<ID> supply(DomainEventHeader<ID> header);
@@ -646,14 +629,5 @@ class AggregateRootTest {
     }
   }
 
-  private AccountAggregate emptyAccountAggregate() {
-    var accountId = new AccountId(UUID.randomUUID());
-    var number = new AccountNumber(new Iban(faker.finance().iban()));
-    return new AccountAggregate(
-        accountId,
-        number,
-        CURRENCY_EUR
-    );
-  }
 
 }

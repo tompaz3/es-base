@@ -8,9 +8,9 @@ import com.tp.esbase.event.Version;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AggregateRootRepository {
+public class AggregateRootRepository<P> {
 
-  private final EventStore eventStore;
+  private final EventStore<P> eventStore;
   private final EventPublisher eventPublisher;
 
   public <ID extends AggregateId, A extends AggregateRoot<ID>> A findById(

@@ -4,9 +4,9 @@ import com.tp.esbase.event.AggregateId;
 import com.tp.esbase.event.AggregateType;
 import java.util.List;
 
-public interface EventsRepository {
+public interface EventsRepository<P> {
 
-  <ID extends AggregateId, P> List<SerializedEvent<P>> findById(AggregateType aggregateType, ID id);
+  <ID extends AggregateId> List<SerializedEvent<P>> findById(AggregateType aggregateType, ID id);
 
-  <P> void save(List<SerializedEvent<P>> events);
+  void save(List<SerializedEvent<P>> events);
 }

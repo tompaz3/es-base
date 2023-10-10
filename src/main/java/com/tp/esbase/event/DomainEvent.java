@@ -12,6 +12,13 @@ public interface DomainEvent<ID extends AggregateId> {
       EventTimestamp timestamp
   ) {
 
+    public static <ID extends AggregateId> DomainEventHeader<ID> initial(ID id) {
+      return new DomainEventHeader<>(
+          EventId.initial(),
+          id,
+          EventTimestamp.now()
+      );
+    }
   }
 
   record EventId(Long value) {

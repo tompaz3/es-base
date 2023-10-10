@@ -7,11 +7,11 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class EventStore {
+public class EventStore<P> {
 
-  private final EventSerializer eventSerializer;
-  private final EventsRepository eventsRepository;
-  private final EventDeserializer eventDeserializer;
+  private final EventSerializer<P> eventSerializer;
+  private final EventsRepository<P> eventsRepository;
+  private final EventDeserializer<P> eventDeserializer;
 
   public <ID extends AggregateId> List<AggregateDomainEvent<ID>> findEventsForAggregate(
       AggregateType type,
