@@ -14,4 +14,14 @@ public interface Projection<R> {
   R handle(DomainEvent<?> event);
 
 
+  interface NoResultProjection extends Projection<Void> {
+
+    @Override
+    default Void handle(DomainEvent<?> event) {
+      handleEvent(event);
+      return null;
+    }
+
+    void handleEvent(DomainEvent<?> event);
+  }
 }

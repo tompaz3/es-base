@@ -8,4 +8,15 @@ package com.tp.esbase.event;
 public interface ProjectionExecutor<R> {
 
   R execute(DomainEvent<?> event);
+
+  interface NoResultProjectionExecutor extends ProjectionExecutor<Void> {
+
+    @Override
+    default Void execute(DomainEvent<?> event) {
+      handleEvent(event);
+      return null;
+    }
+
+    void handleEvent(DomainEvent<?> event);
+  }
 }
