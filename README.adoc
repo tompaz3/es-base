@@ -1,0 +1,11 @@
+= es-base
+:toc: left
+:source-highlighter: rouge
+:sectnums:
+:sectnumlevels: 5
+
+[#overview]
+== Overview
+
+This is just some very simple project with poking around with event sourcing concept.
+Nothing too fancy, unfinished and untested.
