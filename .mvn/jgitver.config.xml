@@ -18,11 +18,11 @@
   xsi:schemaLocation="http://jgitver.github.io/maven/configuration/1.1.0 https://jgitver.github.io/maven/configuration/jgitver-configuration-v1_1_0.xsd">
   <strategy>CONFIGURABLE</strategy>
   <policy>LATEST</policy>    <!-- LookupPolicy to select the base tag/commit for the version computation -->
-  <autoIncrementPatch>true</autoIncrementPatch>
+  <autoIncrementPatch>false</autoIncrementPatch>
   <useCommitDistance>false</useCommitDistance>
   <useDirty>false</useDirty>
-  <useGitCommitId>true</useGitCommitId>
-  <gitCommitIdLength>8</gitCommitIdLength>  <!-- between [8,40] -->
-  <maxSearchDepth>10</maxSearchDepth>  <!-- upper or equal to 1, ommited otherwise, default to infinite -->
+  <useGitCommitId>false</useGitCommitId>
+  <!--  <gitCommitIdLength>8</gitCommitIdLength>  &lt;!&ndash; between [8,40] &ndash;&gt;-->
+  <!--  <maxSearchDepth>10</maxSearchDepth>  &lt;!&ndash; upper or equal to 1, ommited otherwise, default to infinite &ndash;&gt;-->
   <nonQualifierBranches>main,dev</nonQualifierBranches> <!-- comma separated, example "master,integration" -->
 </configuration>
