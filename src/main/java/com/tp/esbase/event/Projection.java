@@ -1,11 +1,17 @@
 package com.tp.esbase.event;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-public interface Projection {
+/**
+ * Marker interface for a projection.
+ *
+ * @param <R> the type of the result of the projection event handling.
+ */
+public interface Projection<R> {
 
   List<Class<? extends DomainEvent<?>>> supportedEvents();
 
-  CompletableFuture<Void> handle(DomainEvent<?> event);
+  R handle(DomainEvent<?> event);
+
+
 }

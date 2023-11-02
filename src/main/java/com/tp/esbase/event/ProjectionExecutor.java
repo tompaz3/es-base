@@ -1,8 +1,11 @@
 package com.tp.esbase.event;
 
-import java.util.concurrent.CompletableFuture;
+/**
+ * Marker interface for Projection Executor.
+ *
+ * @param <R> the type of the result of the projection event handling.
+ */
+public interface ProjectionExecutor<R> {
 
-public interface ProjectionExecutor {
-
-  CompletableFuture<Void> execute(DomainEvent<?> event);
+  R execute(DomainEvent<?> event);
 }

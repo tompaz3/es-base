@@ -4,6 +4,7 @@ import static com.tp.esbase.event.testdomain.error.AccountBalanceTooLowForBlockE
 import static com.tp.esbase.event.testdomain.error.AccountBalanceTooLowForWithdrawalException.accountBalanceTooLowForWithdrawalException;
 import static com.tp.esbase.event.testdomain.error.AccountBlockDoesNotExistException.accountBlockDoesNotExistException;
 import static com.tp.esbase.event.testdomain.error.AccountUnsupportedCurrencyException.accountUnsupportedCurrencyException;
+import static com.tp.esbase.event.testdomain.error.BlockAlreadyExistsException.blockAlreadyExistsException;
 
 import com.tp.esbase.event.AggregateRoot;
 import com.tp.esbase.event.AggregateType;
@@ -62,6 +63,12 @@ public class AccountAggregate extends AggregateRoot<AccountId> {
   }
 
   public void block(Block block) {
+    if (this.blockedBalance.contains(block.id())) {
+      throw blockAlreadyExistsException(
+          this.id,
+          block
+      );
+    }
     checkSupportedCurrency(block.amount().currency());
     if (this.availableBalance.isLowerThan(block.amount())) {
       throw accountBalanceTooLowForBlockException(

@@ -18,6 +18,10 @@ public final class AccountBlockedBalance {
   }
 
   public boolean doesNotContain(BlockId blockId) {
-    return !this.blocks.containsKey(blockId);
+    return !contains(blockId);
+  }
+
+  public boolean contains(BlockId blockId) {
+    return this.blocks.containsKey(blockId);
   }
 }

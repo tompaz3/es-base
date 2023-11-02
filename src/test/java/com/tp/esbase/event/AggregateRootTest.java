@@ -18,6 +18,7 @@ import com.tp.esbase.event.testdomain.error.AccountBalanceTooLowForBlockExceptio
 import com.tp.esbase.event.testdomain.error.AccountBalanceTooLowForWithdrawalException;
 import com.tp.esbase.event.testdomain.error.AccountBlockDoesNotExistException;
 import com.tp.esbase.event.testdomain.error.AccountUnsupportedCurrencyException;
+import com.tp.esbase.event.testdomain.error.BlockAlreadyExistsException;
 import com.tp.esbase.event.testdomain.event.AccountCreated;
 import com.tp.esbase.event.testdomain.event.AmountBlocked;
 import com.tp.esbase.event.testdomain.event.AmountCaptured;
@@ -322,6 +323,35 @@ class AggregateRootTest {
               Assertions.fail("Event must be of %s instance".formatted(AmountBlocked.class.getSimpleName()));
             }
           });
+    }
+
+    @Test
+    void when_block_already_exists_then_fail() {
+      // given
+      var accountAggregate = emptyAccountAggregate();
+      accountAggregate.deposit(validAmount(BigDecimal.TEN));
+      var amount = validAmount(BigDecimal.ONE);
+      var block = new Block(newBlockId(), amount);
+      accountAggregate.block(block);
+      accountAggregate.getAndClearInEvents();
+      accountAggregate.getAndClearOutEvents();
+
+      var newBlock = new Block(block.id(), validAmount(BigDecimal.TWO));
+
+      // when
+      var throwableAssert = assertThatCode(() -> accountAggregate.block(newBlock));
+
+      // then
+      // AccountBalanceTooLowForWithdrawalException thrown
+      throwableAssert.isInstanceOf(BlockAlreadyExistsException.class)
+          .hasMessage("Block %s already exists for account %s".formatted(
+              block.id().value(),
+              accountAggregate.id().value()
+          ));
+      // no in event added
+      assertThat(accountAggregate.getAndClearInEvents()).isEmpty();
+      // no out event added
+      assertThat(accountAggregate.getAndClearOutEvents()).isEmpty();
     }
 
     @Test
