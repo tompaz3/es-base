@@ -7,5 +7,5 @@
 [#overview]
 == Overview
 
-This is just some very simple project with poking around with event sourcing concept.
+This is just some very simple project for some poking around with event sourcing concept.
 Nothing too fancy, unfinished and untested.
